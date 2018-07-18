@@ -71,8 +71,19 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 		setResourceLoader(applicationContext);
 	}
 
-	public String[] config() {
-		return selectImports(new StandardAnnotationMetadata(AutoConfigurations.class));
+	public Class<?>[] config() {
+		String[] imports = selectImports(
+				new StandardAnnotationMetadata(AutoConfigurations.class));
+		Class<?>[] types = new Class<?>[imports.length];
+		int i = 0;
+		for (String config : imports) {
+			Class<?> type = ClassUtils.resolveClassName(config, getBeanClassLoader());
+			types[i++] = type;
+		}
+		org.springframework.boot.autoconfigure.AutoConfigurations autos = org.springframework.boot.autoconfigure.AutoConfigurations
+				.of(types);
+		return org.springframework.boot.autoconfigure.AutoConfigurations
+				.getClasses(autos);
 	}
 
 	@Target(ElementType.TYPE)
@@ -117,8 +128,7 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 			ConfigurableListableBeanFactory factory) throws Exception {
 		ConditionEvaluator evaluator = new ConditionEvaluator(registry, getEnvironment(),
 				getResourceLoader());
-		for (String config : config()) {
-			Class<?> type = ClassUtils.resolveClassName(config, getBeanClassLoader());
+		for (Class<?> type : config()) {
 			StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(type);
 			if (evaluator.shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN)) {
 				continue;

@@ -21,12 +21,14 @@ import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetadata;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.util.ClassUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -86,6 +88,8 @@ public class AutoApplication implements Runnable, Closeable,
 		context.getDefaultListableBeanFactory()
 				.addBeanPostProcessor(context.getDefaultListableBeanFactory()
 						.createBean(AutowiredAnnotationBeanPostProcessor.class));
+		AutoConfigurationPackages.register(context,
+				ClassUtils.getPackageName(AutoApplication.class));
 		context.registerBean(ConfigurationPropertiesBindingPostProcessor.class);
 		context.registerBean(ConfigurationBeanFactoryMetadata.BEAN_NAME,
 				ConfigurationBeanFactoryMetadata.class);
