@@ -221,7 +221,7 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 					Object[] args = params(method, getBeanFactory());
 					ReflectionUtils.makeAccessible(method);
 					Object result = ReflectionUtils.invokeMethod(method,
-							getBeanFactory().getBean(type), args);
+							getBean(method, type), args);
 					if (result == null) {
 						result = nullBean();
 					}
@@ -230,12 +230,26 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 				RootBeanDefinition definition = new RootBeanDefinition();
 				definition.setTargetType(beanClass);
 				definition.setInstanceSupplier(supplier);
+				definition.setFactoryMethodName(method.getName());
+				// Bean name for factory...
+				definition.setFactoryBeanName(type.getName());
 				registry.registerBeanDefinition(method.getName(), definition);
 			}
 		}
 		catch (ArrayStoreException e) {
 			// TODO: use ASM to avoid this?
 		}
+	}
+
+	private Object getBean(Method method, Class<?> type) {
+		if (Modifier.isStatic(method.getModifiers())) {
+			return null;
+		}
+		// We have to use getBeansOfType() to avoid eager instantiation of everything when
+		// this is a factory for a bean factory post processor
+		Map<String, ?> beans = getBeanFactory().getBeansOfType(type, false, false);
+		// TODO: deal with no unique bean
+		return beans.values().iterator().next();
 	}
 
 	private Object nullBean() {

@@ -89,7 +89,7 @@ public class AutoApplication implements Runnable, Closeable,
 				.addBeanPostProcessor(context.getDefaultListableBeanFactory()
 						.createBean(AutowiredAnnotationBeanPostProcessor.class));
 		AutoConfigurationPackages.register(context,
-				ClassUtils.getPackageName(AutoApplication.class));
+				ClassUtils.getPackageName(getClass()));
 		context.registerBean(ConfigurationPropertiesBindingPostProcessor.class);
 		context.registerBean(ConfigurationBeanFactoryMetadata.BEAN_NAME,
 				ConfigurationBeanFactoryMetadata.class);
