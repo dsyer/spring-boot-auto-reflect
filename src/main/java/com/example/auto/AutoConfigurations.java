@@ -132,12 +132,14 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 		for (Class<?> nested : type.getDeclaredClasses()) {
 			if (Modifier.isStatic(nested.getModifiers())) {
 				try {
-					StandardAnnotationMetadata nestedMetadata = new StandardAnnotationMetadata(
-							nested);
-					if (nestedMetadata.hasAnnotation(Configuration.class.getName())) {
-						if (!evaluator.shouldSkip(nestedMetadata,
-								ConfigurationPhase.REGISTER_BEAN)) {
-							register(registry, evaluator, nested, nestedMetadata);
+					if (!registry.containsBeanDefinition(nested.getName())) {
+						StandardAnnotationMetadata nestedMetadata = new StandardAnnotationMetadata(
+								nested);
+						if (nestedMetadata.hasAnnotation(Configuration.class.getName())) {
+							if (!evaluator.shouldSkip(nestedMetadata,
+									ConfigurationPhase.REGISTER_BEAN)) {
+								register(registry, evaluator, nested, nestedMetadata);
+							}
 						}
 					}
 				}
