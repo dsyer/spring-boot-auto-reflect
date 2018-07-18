@@ -23,22 +23,18 @@ import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostP
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetadata;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
-import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.web.reactive.function.server.RouterFunction;
-
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RouterFunctions.route;
-import static org.springframework.web.reactive.function.server.ServerResponse.ok;
-
-import reactor.core.publisher.Mono;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author Dave Syer
  *
  */
+@RestController
 public class AutoApplication implements Runnable, Closeable,
 		ApplicationContextInitializer<GenericApplicationContext> {
 
@@ -46,10 +42,9 @@ public class AutoApplication implements Runnable, Closeable,
 
 	private GenericApplicationContext context;
 
-	public RouterFunction<?> userEndpoints() {
-		return route(GET("/"), request -> ok().body(Mono.just("Hello"), String.class))
-				.andRoute(GET("/error"), request -> ok()
-						.body(Mono.error(new RuntimeException("Oops")), String.class));
+	@GetMapping
+	public String home() {
+		return "Hello";
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -81,19 +76,21 @@ public class AutoApplication implements Runnable, Closeable,
 		application.setRegisterShutdownHook(false);
 		application.setDefaultProperties(Collections.singletonMap("boot.active", "true"));
 		application.addInitializers(this);
-		application.setApplicationContextClass(ReactiveWebServerApplicationContext.class);
+		application.setApplicationContextClass(ServletWebServerApplicationContext.class);
 		application.run();
 		System.err.println(MARKER);
 	}
 
 	@Override
 	public void initialize(GenericApplicationContext context) {
-		context.registerBean(AutowiredAnnotationBeanPostProcessor.class);
+		context.getDefaultListableBeanFactory()
+				.addBeanPostProcessor(context.getDefaultListableBeanFactory()
+						.createBean(AutowiredAnnotationBeanPostProcessor.class));
 		context.registerBean(ConfigurationPropertiesBindingPostProcessor.class);
 		context.registerBean(ConfigurationBeanFactoryMetadata.BEAN_NAME,
 				ConfigurationBeanFactoryMetadata.class);
 		context.addBeanFactoryPostProcessor(new AutoConfigurations(context));
-		context.registerBean(RouterFunction.class, () -> userEndpoints());
+		context.registerBean(AutoApplication.class, () -> this);
 	}
 
 }
