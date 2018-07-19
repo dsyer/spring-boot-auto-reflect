@@ -1,0 +1,5 @@
+#org.springframework.context.ApplicationContextInitializer=\
+#org.springframework.boot.reflect.AutoInitializer
+
+org.springframework.context.ApplicationListener=\
+org.springframework.boot.reflect.AutoListener
