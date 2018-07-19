@@ -77,6 +77,9 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 		int i = 0;
 		for (String config : imports) {
 			Class<?> type = ClassUtils.resolveClassName(config, getBeanClassLoader());
+			if (type == org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration.class) {
+				type = MessageSourceAutoConfiguration.class;
+			}
 			types[i++] = type;
 		}
 		org.springframework.boot.autoconfigure.AutoConfigurations autos = org.springframework.boot.autoconfigure.AutoConfigurations
