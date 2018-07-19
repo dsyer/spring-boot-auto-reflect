@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -221,9 +220,6 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 					ReflectionUtils.makeAccessible(method);
 					Object result = ReflectionUtils.invokeMethod(method,
 							getBean(method, type), args);
-					if (result == null) {
-						result = nullBean();
-					}
 					return result;
 				};
 				RootBeanDefinition definition = new RootBeanDefinition();
@@ -249,11 +245,6 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 		Map<String, ?> beans = getBeanFactory().getBeansOfType(type, false, false);
 		// TODO: deal with no unique bean
 		return beans.values().iterator().next();
-	}
-
-	private Object nullBean() {
-		return BeanUtils.instantiateClass(ClassUtils.resolveClassName(
-				"org.springframework.beans.factory.support.NullBean", null));
 	}
 
 	private Object[] params(Method method, ConfigurableListableBeanFactory factory) {

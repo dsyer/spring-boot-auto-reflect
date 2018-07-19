@@ -17,6 +17,7 @@
 	<modules>
 		<module>auto</module>
 		<module>demo</module>
+		<module>mvc</module>
 		<module>petclinic</module>
 	</modules>
 
