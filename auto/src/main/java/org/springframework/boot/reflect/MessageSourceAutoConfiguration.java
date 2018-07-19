@@ -18,6 +18,7 @@ package org.springframework.boot.reflect;
 
 import java.time.Duration;
 
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
@@ -52,6 +53,7 @@ import org.springframework.util.StringUtils;
 @Configuration
 @ConditionalOnMissingBean(value = MessageSource.class, search = SearchStrategy.CURRENT)
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@AutoConfigureBefore(org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration.class)
 @Conditional(ResourceBundleCondition.class)
 @EnableConfigurationProperties
 public class MessageSourceAutoConfiguration {
