@@ -143,7 +143,9 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 					if (!registry.containsBeanDefinition(nested.getName())) {
 						StandardAnnotationMetadata nestedMetadata = new StandardAnnotationMetadata(
 								nested);
-						if (nestedMetadata.hasAnnotation(Configuration.class.getName())) {
+						if (nestedMetadata.hasAnnotation(Configuration.class.getName())
+								|| nestedMetadata
+										.hasAnnotatedMethods(Bean.class.getName())) {
 							if (!evaluator.shouldSkip(nestedMetadata,
 									ConfigurationPhase.REGISTER_BEAN)) {
 								register(registry, evaluator, nested, nestedMetadata);
