@@ -1,0 +1,66 @@
+This project creates functional bean definitions from Spring Boot
+autoconfigurations. It's really (surprisingly) fast.
+
+To use it include the library on your classpath:
+
+```
+		<dependency>
+			<groupId>org.springframework.boot.experimental</groupId>
+			<artifactId>spring-boot-auto-reflect</artifactId>
+			<version>1.0.0.BUILD-SNAPSHOT</version>
+		</dependency>
+```
+
+Create your Spring Boot application as an
+`ApplicationContextInitializer` and register beans in the `initialize()`
+method, e.g.
+
+```java
+@RestController
+public class AutoApplication
+		implements ApplicationContextInitializer<GenericApplicationContext> {
+
+	@GetMapping
+	public String home() {
+		return "Hello";
+	}
+
+	@Override
+	public void initialize(GenericApplicationContext context) {
+		context.registerBean(AutoApplication.class, () -> this);
+	}
+
+}
+```
+
+then use the custom `SpringApplication` class from this library
+instead of the default one to launch your app, as normal:
+
+```java
+	public static void main(String[] args) throws Exception {
+		SpringApplication.run(AutoApplication.class, args);
+	}
+```
+
+For integration tests use the test context loader from this library. E.g:
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = AutoApplication.class, loader = AutoTestContextLoader.class)
+public class AutoApplicationTests {
+
+	@Autowired
+	private WebTestClient rest;
+
+	@Test
+	public void contextLoads() {
+		rest.get().uri("/").exchange().expectBody(String.class).isEqualTo("Hello");
+	}
+
+}
+
+```
+
+Unsupported: test slices (`@WebMvcTest` etc.) and `@AutoConfigure*`
+annotations in tests.
