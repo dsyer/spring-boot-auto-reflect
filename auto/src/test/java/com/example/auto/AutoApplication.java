@@ -15,8 +15,7 @@
  */
 package com.example.auto;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.reflect.SpringApplication;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,14 +37,7 @@ public class AutoApplication
 	}
 
 	public static void main(String[] args) throws Exception {
-		SpringApplication application = new SpringApplication(AutoApplication.class) {
-			@Override
-			protected void load(ApplicationContext context, Object[] sources) {
-				// We don't want the annotation bean definition reader
-				// super.load(context, sources);
-			}
-		};
-		application.run();
+		SpringApplication.run(AutoApplication.class, args);
 		System.err.println(MARKER);
 	}
 
