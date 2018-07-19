@@ -16,9 +16,8 @@
 
 package org.springframework.samples.petclinic;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.reflect.SpringApplication;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.samples.petclinic.owner.OwnerController;
@@ -39,15 +38,7 @@ public class PetClinicApplication
         implements ApplicationContextInitializer<GenericApplicationContext> {
 
     public static void main(String[] args) {
-        SpringApplication application = new SpringApplication(
-                PetClinicApplication.class) {
-            @Override
-            protected void load(ApplicationContext context, Object[] sources) {
-                // We don't want the annotation bean definition reader
-                // super.load(context, sources);
-            }
-        };
-        application.run(args);
+        SpringApplication.run(PetClinicApplication.class, args);
     }
 
     @Override
