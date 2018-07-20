@@ -15,7 +15,6 @@
  */
 package com.example.auto;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.reflect.SpringApplication;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.support.GenericApplicationContext;
@@ -32,12 +31,9 @@ public class AutoApplication
 
 	public static final String MARKER = "Benchmark app started";
 
-	@Value("${greeting:Hello}")
-	private String greeting;
-
 	@GetMapping
 	public String home() {
-		return greeting;
+		return "Hello";
 	}
 
 	public static void main(String[] args) throws Exception {

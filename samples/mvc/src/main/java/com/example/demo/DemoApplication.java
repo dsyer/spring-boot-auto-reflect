@@ -3,7 +3,6 @@ package com.example.demo;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -17,12 +16,9 @@ public class DemoApplication implements Runnable, Closeable {
 
 	private ConfigurableApplicationContext context;
 
-	@Value("${greeting:Hello}")
-	private String greeting;
-
 	@GetMapping
 	public String home() {
-		return greeting;
+		return "Hello";
 	}
 
 	public static void main(String[] args) throws Exception {

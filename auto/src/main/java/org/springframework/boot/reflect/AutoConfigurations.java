@@ -127,11 +127,17 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 		ConditionEvaluator evaluator = new ConditionEvaluator(registry, getEnvironment(),
 				getResourceLoader());
 		for (Class<?> type : config()) {
-			StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(type);
-			if (evaluator.shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN)) {
-				continue;
+			try {
+				StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(
+						type);
+				if (evaluator.shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN)) {
+					continue;
+				}
+				register(registry, evaluator, type, metadata);
 			}
-			register(registry, evaluator, type, metadata);
+			catch (ArrayStoreException e) {
+				// ignore
+			}
 		}
 	}
 

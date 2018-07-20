@@ -16,11 +16,14 @@
 package org.springframework.boot.reflect;
 
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetadata;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBindingPostProcessor;
 import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.annotation.ContextAnnotationAutowireCandidateResolver;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -39,9 +42,21 @@ public class AutoInitializer
 	@Override
 	public void initialize(GenericApplicationContext context) {
 		AutoConfigurationPackages.register(context, ClassUtils.getPackageName(this.type));
-		context.getDefaultListableBeanFactory()
-				.addBeanPostProcessor(context.getDefaultListableBeanFactory()
-						.createBean(AutowiredAnnotationBeanPostProcessor.class));
+		DefaultListableBeanFactory beanFactory = context.getDefaultListableBeanFactory();
+		if (beanFactory != null) {
+			if (!(beanFactory
+					.getDependencyComparator() instanceof AnnotationAwareOrderComparator)) {
+				beanFactory
+						.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
+			}
+			if (!(beanFactory
+					.getAutowireCandidateResolver() instanceof ContextAnnotationAutowireCandidateResolver)) {
+				beanFactory.setAutowireCandidateResolver(
+						new ContextAnnotationAutowireCandidateResolver());
+			}
+			beanFactory.addBeanPostProcessor(
+					beanFactory.createBean(AutowiredAnnotationBeanPostProcessor.class));
+		}
 		context.registerBean(ConfigurationPropertiesBindingPostProcessor.class);
 		context.registerBean(ConfigurationBeanFactoryMetadata.BEAN_NAME,
 				ConfigurationBeanFactoryMetadata.class);

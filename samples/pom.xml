@@ -3,20 +3,20 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.0.BUILD-SNAPSHOT</version>
+		<groupId>org.springframework.boot.experimental</groupId>
+		<artifactId>spring-boot-auto-reflect-parent</artifactId>
+		<version>1.0.0.BUILD-SNAPSHOT</version>
 	</parent>
 
-	<groupId>org.springframework.boot.experimental</groupId>
-	<artifactId>spring-boot-auto-reflect-parent</artifactId>
-	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<artifactId>spring-boot-auto-reflect-samples</artifactId>
 	<packaging>pom</packaging>
 	<name>Parent Demo</name>
 
 	<modules>
-		<module>auto</module>
-		<module>samples</module>
+		<module>demo</module>
+		<module>mvc</module>
+		<module>cloud</module>
+		<module>petclinic</module>
 	</modules>
 
 	<properties>

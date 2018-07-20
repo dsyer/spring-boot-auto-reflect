@@ -44,7 +44,8 @@ public class AutoListener implements SmartApplicationListener {
 			if (source instanceof Class<?>) {
 				type = (Class<?>) source;
 			}
-			if (ApplicationContextInitializer.class.isAssignableFrom(type)) {
+			if (ApplicationContextInitializer.class.isAssignableFrom(type) && !type
+					.getName().startsWith("org.springframework.cloud.bootstrap")) {
 				WebApplicationType webApplicationType = application
 						.getWebApplicationType();
 				if (webApplicationType == WebApplicationType.REACTIVE) {
