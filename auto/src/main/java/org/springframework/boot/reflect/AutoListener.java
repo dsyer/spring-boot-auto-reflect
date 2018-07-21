@@ -24,6 +24,7 @@ import org.springframework.boot.web.servlet.context.ServletWebServerApplicationC
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.SmartApplicationListener;
+import org.springframework.context.support.GenericApplicationContext;
 
 /**
  * Listener that sets up an {@link ApplicationContextInitializer} to register functional
@@ -56,6 +57,11 @@ public class AutoListener implements SmartApplicationListener {
 					application.setApplicationContextClass(
 							ServletWebServerApplicationContext.class);
 				}
+				else {
+					application
+							.setApplicationContextClass(GenericApplicationContext.class);
+				}
+
 				application.addInitializers(BeanUtils.instantiateClass(type,
 						ApplicationContextInitializer.class));
 				application.addInitializers(new AutoInitializer(type));
