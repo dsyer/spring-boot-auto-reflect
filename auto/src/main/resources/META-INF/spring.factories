@@ -1,5 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.springframework.boot.reflect.MessageSourceAutoConfiguration
-
 org.springframework.context.ApplicationListener=\
 org.springframework.boot.reflect.AutoListener
