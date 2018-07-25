@@ -42,6 +42,12 @@ instead of the default one to launch your app, as normal:
 	}
 ```
 
+Instead of using an `ApplicationContextInitializer` you can use the
+regular `@SpringBootApplication` and `@Configuration` programming
+model in your own classes, and set `spring.functional.enabled=true`
+(e.g. as a System property). Be sure to use the custom
+`SpringApplication` class though if you do that.
+
 For integration tests use the test context loader from this library. E.g:
 
 ```java

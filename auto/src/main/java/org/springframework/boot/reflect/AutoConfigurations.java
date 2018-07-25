@@ -22,37 +22,19 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.config.DependencyDescriptor;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigurationImportSelector;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.reflect.AutoConfigurations.EnableActuatorAutoConfigurations;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ConfigurationCondition.ConfigurationPhase;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.core.MethodParameter;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.type.MethodMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.ReflectionUtils;
 
 @Configuration
 @EnableActuatorAutoConfigurations
@@ -124,146 +106,11 @@ class AutoConfigurations extends AutoConfigurationImportSelector
 
 	protected void register(BeanDefinitionRegistry registry,
 			ConfigurableListableBeanFactory factory) throws Exception {
-		ConditionEvaluator evaluator = new ConditionEvaluator(registry, getEnvironment(),
+		AutoRegistrar registrar = new AutoRegistrar(registry, factory, getEnvironment(),
 				getResourceLoader());
 		for (Class<?> type : config()) {
-			try {
-				StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(
-						type);
-				if (evaluator.shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN)) {
-					continue;
-				}
-				register(registry, evaluator, type, metadata);
-			}
-			catch (ArrayStoreException e) {
-				// ignore
-			}
+			registrar.register(type);
 		}
-	}
-
-	private void register(BeanDefinitionRegistry registry, ConditionEvaluator evaluator,
-			Class<?> type, StandardAnnotationMetadata metadata) {
-		for (Class<?> nested : type.getDeclaredClasses()) {
-			if (Modifier.isStatic(nested.getModifiers())) {
-				try {
-					if (!registry.containsBeanDefinition(nested.getName())) {
-						StandardAnnotationMetadata nestedMetadata = new StandardAnnotationMetadata(
-								nested);
-						if (nestedMetadata.hasAnnotation(Configuration.class.getName())
-								|| nestedMetadata
-										.hasAnnotatedMethods(Bean.class.getName())) {
-							if (!evaluator.shouldSkip(nestedMetadata,
-									ConfigurationPhase.REGISTER_BEAN)) {
-								register(registry, evaluator, nested, nestedMetadata);
-							}
-						}
-					}
-				}
-				catch (ArrayStoreException e) {
-					// TODO: use ASM to avoid this?
-				}
-			}
-		}
-		if (metadata.hasAnnotation(Import.class.getName())) {
-			Object[] props = (Object[]) metadata
-					.getAnnotationAttributes(Import.class.getName()).get("value");
-			if (props != null && props.length > 0) {
-				for (Object object : props) {
-					Class<?> imported = (Class<?>) object;
-					if (ImportBeanDefinitionRegistrar.class.isAssignableFrom(imported)) {
-						ImportBeanDefinitionRegistrar registrar = (ImportBeanDefinitionRegistrar) getBeanFactory()
-								.createBean(imported);
-						registrar.registerBeanDefinitions(metadata, registry);
-					}
-					try {
-						StandardAnnotationMetadata nestedMetadata = new StandardAnnotationMetadata(
-								imported);
-						if (!registry.containsBeanDefinition(imported.getName())
-								&& !evaluator.shouldSkip(nestedMetadata,
-										ConfigurationPhase.REGISTER_BEAN)) {
-							register(registry, evaluator, imported, nestedMetadata);
-						}
-					}
-					catch (ArrayStoreException e) {
-						// TODO: use ASM to avoid this?
-					}
-				}
-			}
-		}
-		if (metadata.hasAnnotation(EnableConfigurationProperties.class.getName())) {
-			Object[] props = (Object[]) metadata.getAnnotationAttributes(
-					EnableConfigurationProperties.class.getName()).get("value");
-			if (props != null && props.length > 0) {
-				for (Object object : props) {
-					Class<?> prop = (Class<?>) object;
-					String name = prop.getName();
-					if (!registry.containsBeanDefinition(name)) {
-						registry.registerBeanDefinition(name, BeanDefinitionBuilder
-								.genericBeanDefinition(prop).getRawBeanDefinition());
-					}
-				}
-			}
-		}
-		registry.registerBeanDefinition(type.getName(),
-				BeanDefinitionBuilder.genericBeanDefinition(type).getRawBeanDefinition());
-		Set<MethodMetadata> methods = metadata.getAnnotatedMethods(Bean.class.getName());
-		Map<String, MethodMetadata> beans = new HashMap<>();
-		for (MethodMetadata method : methods) {
-			beans.put(method.getMethodName(), method);
-		}
-		for (Method method : ReflectionUtils.getUniqueDeclaredMethods(type)) {
-			if (AnnotationUtils.findAnnotation(method, Bean.class) != null) {
-				register(registry, evaluator, type, method, beans.get(method.getName()));
-			}
-		}
-	}
-
-	private void register(BeanDefinitionRegistry registry, ConditionEvaluator evaluator,
-			Class<?> type, Method method, MethodMetadata metadata) {
-		try {
-			if (!evaluator.shouldSkip(metadata, ConfigurationPhase.REGISTER_BEAN)) {
-				Class<?> beanClass = method.getReturnType();
-				Supplier<?> supplier = () -> {
-					Object[] args = params(method, getBeanFactory());
-					ReflectionUtils.makeAccessible(method);
-					Object result = ReflectionUtils.invokeMethod(method,
-							getBean(method, type), args);
-					return result;
-				};
-				RootBeanDefinition definition = new RootBeanDefinition();
-				definition.setTargetType(beanClass);
-				definition.setInstanceSupplier(supplier);
-				definition.setFactoryMethodName(method.getName());
-				// Bean name for factory...
-				definition.setFactoryBeanName(type.getName());
-				registry.registerBeanDefinition(method.getName(), definition);
-			}
-		}
-		catch (ArrayStoreException e) {
-			// TODO: use ASM to avoid this?
-		}
-	}
-
-	private Object getBean(Method method, Class<?> type) {
-		if (Modifier.isStatic(method.getModifiers())) {
-			return null;
-		}
-		// We have to use getBeansOfType() to avoid eager instantiation of everything when
-		// this is a factory for a bean factory post processor
-		Map<String, ?> beans = getBeanFactory().getBeansOfType(type, false, false);
-		// TODO: deal with no unique bean
-		return beans.values().iterator().next();
-	}
-
-	private Object[] params(Method method, ConfigurableListableBeanFactory factory) {
-		Object[] params = new Object[method.getParameterCount()];
-		for (int i = 0; i < params.length; i++) {
-			// TODO: deal with required flag
-			params[i] = factory.resolveDependency(
-					new DependencyDescriptor(new MethodParameter(method, i), false),
-					method.getName());
-		}
-		return params;
 	}
 
 }

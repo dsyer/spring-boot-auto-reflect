@@ -25,6 +25,7 @@ import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.env.StandardEnvironment;
 
 /**
  * Listener that sets up an {@link ApplicationContextInitializer} to register functional
@@ -36,17 +37,19 @@ import org.springframework.context.support.GenericApplicationContext;
  */
 public class AutoListener implements SmartApplicationListener {
 
+	private StandardEnvironment environment = new StandardEnvironment();
+
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		ApplicationStartingEvent starting = (ApplicationStartingEvent) event;
 		SpringApplication application = starting.getSpringApplication();
+		boolean initialized = false;
 		for (Object source : application.getAllSources()) {
 			Class<?> type = null;
 			if (source instanceof Class<?>) {
 				type = (Class<?>) source;
 			}
-			if (ApplicationContextInitializer.class.isAssignableFrom(type) && !type
-					.getName().startsWith("org.springframework.cloud.bootstrap")) {
+			if (!initialized && isFunctional(type)) {
 				WebApplicationType webApplicationType = application
 						.getWebApplicationType();
 				if (webApplicationType == WebApplicationType.REACTIVE) {
@@ -61,12 +64,28 @@ public class AutoListener implements SmartApplicationListener {
 					application
 							.setApplicationContextClass(GenericApplicationContext.class);
 				}
-
+				application.addInitializers(new AutoInitializer(type));
+				initialized = true;
+			}
+			if (isInitializer(type)) {
 				application.addInitializers(BeanUtils.instantiateClass(type,
 						ApplicationContextInitializer.class));
-				application.addInitializers(new AutoInitializer(type));
+			} else {
+				application.addInitializers(new BeansInitializer(type));
 			}
 		}
+	}
+
+	private boolean isFunctional(Class<?> type) {
+		if (environment.getProperty("spring.functional.enabled", Boolean.class, false)) {
+			return true;
+		}
+		return isInitializer(type);
+	}
+
+	private boolean isInitializer(Class<?> type) {
+		return ApplicationContextInitializer.class.isAssignableFrom(type) && !type
+				.getName().startsWith("org.springframework.cloud.bootstrap");
 	}
 
 	@Override
